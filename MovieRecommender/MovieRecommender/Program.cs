@@ -52,7 +52,7 @@ namespace MovieRecommender
 
                 List<SimpleMovie> movies = new List<SimpleMovie>();
                 List<double[]> trainingSet = new List<double[]>();
-                double[] parameters = new double[4] { 1, 1, 1, 1};
+                double[] parameters = new double[3] { 1, 1, 1};
                 foreach (Evaluation evaluation in userEvaluations)
                 {
                     SimpleMovie movie = new SimpleMovie(client.GetMovie(evaluation.MovieId, MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews));
