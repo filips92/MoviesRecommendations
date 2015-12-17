@@ -15,72 +15,86 @@ namespace MovieRecommender
         static void Main(string[] args)
         {
             var client = new TMDbClient(ConfigurationManager.AppSettings["TMDbAPIKey"]);
-            var test = new SimpleMovie(client.GetMovie(47964, MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews));
-            int a = 2;
 
-            var reader = new StreamReader(File.OpenRead("../../AppData/evaluations.csv"));
+            var evaluations = LoadEvaluations();
+            var personIds = LoadPersonIds();
 
-            List<Evaluation> evaluations = new List<Evaluation>();
-            reader.ReadLine();//skipping the column names
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                var values = line.Split(';');
-                Evaluation evaluation;
-                evaluation = new Evaluation(){
-                    Id = Convert.ToInt32(values[0]),
-                    PersonId = Convert.ToInt32(values[1]),
-                    MovieId = Convert.ToInt32(values[2]),
-                    Grade = (values[values.Count() - 1] == "NULL") ? 0 : Convert.ToInt32(values[3])
-                };
-                evaluations.Add(evaluation);                 
-            }
+            foreach (var personId in personIds) {
+                var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
+                var emptyEvaluations = userEvaluations.Where(e => e.Grade == 0).ToList();
+                var movies = new List<SimpleMovie>();
+                var trainingSet = new List<double[]>();
+                var parameters = new double[3] { 1, 1, 1};
 
-            reader = new StreamReader(File.OpenRead("../../AppData/people.csv"));
-
-            List<int> people = new List<int>();
-            reader.ReadLine();//skipping the column names
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                var values = line.Split(';');
-                people.Add( Convert.ToInt32(values[0]) );
-            }
-
-            foreach (int personId in people) {
-                List<Evaluation> userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
-
-                List<SimpleMovie> movies = new List<SimpleMovie>();
-                List<double[]> trainingSet = new List<double[]>();
-                double[] parameters = new double[3] { 1, 1, 1};
-                foreach (Evaluation evaluation in userEvaluations)
+                Trainer trainer;
+                
+                foreach (var singleUserEvaluation in userEvaluations)
                 {
-                    SimpleMovie movie = new SimpleMovie(client.GetMovie(evaluation.MovieId, MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews));
-                    if (movie.MovieId != 0 && evaluation.Grade > 0)
+                    var movie = new SimpleMovie(client.GetMovie(singleUserEvaluation.MovieId, MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews));
+                    
+                    if (movie.MovieId != 0 && singleUserEvaluation.Grade > 0)
                     {
-                        movies.Add(movie);
                         double[] vector = movie.ToVector();
-                        double[] singleSet = new double[3];
+                        double[] singleSet = new double[vector.Length + 1];
+
                         for (int i = 0; i < vector.Length; i++)
                         {
                             singleSet[i] = vector[i];
                         }
-                        singleSet[singleSet.Length - 1] = (double)evaluation.Grade;
+                        
+                        singleSet[singleSet.Length - 1] = (double)singleUserEvaluation.Grade.Value;
                         trainingSet.Add(singleSet);
+                        movies.Add(movie);
                     }
                 }
-                
-                Trainer trainer = new Trainer();
-                trainer.trainSetElements = trainingSet.ToArray();
-                trainer.parameters = parameters.ToArray();
 
+                trainer = new Trainer
+                {
+                    trainSetElements = trainingSet.ToArray(),
+                    parameters = parameters.ToArray()
+                };
                 trainer.train();
-
-                List<Evaluation> emptyEvaluations = evaluations.Where(e => e.Grade == 0).ToList();
 
                 //TODO
             }
            
+        }
+
+        private static List<int> LoadPersonIds()
+        {
+            var reader = new StreamReader(File.OpenRead("../../AppData/people.csv"));
+            var personIds = new List<int>();
+            reader.ReadLine();//skipping the column names
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                var values = line.Split(';');
+                personIds.Add(Convert.ToInt32(values[0]));
+            }
+
+            return personIds;
+        }
+
+        private static List<Evaluation> LoadEvaluations()
+        {
+            var reader = new StreamReader(File.OpenRead("../../AppData/evaluations.csv"));
+            var evaluations = new List<Evaluation>();
+            reader.ReadLine();//skipping the column names
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                var values = line.Split(';');
+                var evaluation = new Evaluation()
+                {
+                    Id = Convert.ToInt32(values[0]),
+                    PersonId = Convert.ToInt32(values[1]),
+                    MovieId = Convert.ToInt32(values[2]),
+                    Grade = (values[3] == "NULL") ? 0 : Convert.ToInt32(values[3])
+                };
+                evaluations.Add(evaluation);
+            }
+
+            return evaluations;
         }
     }
 }
