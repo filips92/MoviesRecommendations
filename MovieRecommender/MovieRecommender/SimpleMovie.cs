@@ -95,13 +95,13 @@ namespace MovieRecommender
         {
             return new double[]
             {
-                //this.Budget,
-                //this.DirectorId,
-                //this.MainLanguageId,
-                //this.MainActorId,
+                this.Budget,
+                this.DirectorId,
+                this.MainLanguageId,
+                this.MainActorId,
                 this.Popularity,
                 this.VoteAverage,
-                //this.Year
+                this.Year
             };
         }
 
