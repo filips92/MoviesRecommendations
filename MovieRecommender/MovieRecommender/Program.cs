@@ -24,13 +24,13 @@ namespace MovieRecommender
             foreach (var personId in personIds)
             {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
-                var evaluator = new DecisionTreeEvaluator(userEvaluations);
+                var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);
                 var emptyUserEvaluations = userEvaluations.Where(e => e.IsEmpty()).ToList();
                
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
-                    var notEvaluatedMovie = cachedMovies.Single(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
-                    singleEmptyEvaluation.Grade = evaluator.PredictGrade(singleEmptyEvaluation.MovieId);
+                    var notEvaluatedMovie = cachedMovies.SingleOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
+                    singleEmptyEvaluation.Grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
                 }
             }
         }

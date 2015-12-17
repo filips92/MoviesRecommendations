@@ -13,7 +13,7 @@ namespace MovieRecommender
             // additional initializing if needed
         }
 
-        public override int PredictGrade(int movieId)
+        public override int PredictGrade(SimpleMovie movie)
         {
             throw new NotImplementedException();
         }

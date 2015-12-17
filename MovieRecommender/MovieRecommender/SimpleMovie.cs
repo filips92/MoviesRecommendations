@@ -9,7 +9,7 @@ using TMDbLib.Objects.Movies;
 
 namespace MovieRecommender
 {
-    class SimpleMovie
+    public class SimpleMovie
     {
         public SimpleMovie(Movie tmdbMovie)
         {
@@ -76,14 +76,15 @@ namespace MovieRecommender
         public SimpleMovie(string csvLine)
         {
             var splittedLine = csvLine.Split(';');
-
-            this.Budget = Convert.ToInt64(splittedLine[0]);
-            this.DirectorId = Convert.ToInt32(splittedLine[1]);
-            this.MainLanguageId = Convert.ToInt32(splittedLine[2]);
-            this.MainActorId = Convert.ToInt32(splittedLine[3]);
-            this.Popularity = Convert.ToDouble(splittedLine[4]);
-            this.VoteAverage = Convert.ToDouble(splittedLine[5]);
-            this.Year = Convert.ToInt32(splittedLine[6]);
+            
+            this.MovieId = Convert.ToInt32(splittedLine[0], NumberFormatInfo.InvariantInfo);
+            this.Budget = Convert.ToInt64(splittedLine[1], NumberFormatInfo.InvariantInfo);
+            this.DirectorId = Convert.ToInt32(splittedLine[2], NumberFormatInfo.InvariantInfo);
+            this.MainLanguageId = Convert.ToInt32(splittedLine[3], NumberFormatInfo.InvariantInfo);
+            this.MainActorId = Convert.ToInt32(splittedLine[4], NumberFormatInfo.InvariantInfo);
+            this.Popularity = Convert.ToDouble(splittedLine[5], NumberFormatInfo.InvariantInfo);
+            this.VoteAverage = Convert.ToDouble(splittedLine[6], NumberFormatInfo.InvariantInfo);
+            this.Year = Convert.ToInt32(splittedLine[7], NumberFormatInfo.InvariantInfo);
         }
 
         public long Budget { get; set; }

@@ -13,6 +13,6 @@ namespace MovieRecommender
         {
             this.UserEvaluations = userEvaluations;
         }
-        public abstract int PredictGrade(int movieId);
+        public abstract int PredictGrade(SimpleMovie movie);
     }
 }
