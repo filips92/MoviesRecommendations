@@ -22,35 +22,17 @@ namespace MovieRecommender
 
             var evaluations = LoadEvaluations();
             var personIds = LoadPersonIds();
-
+            
             foreach (var personId in personIds)
             {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
+                var evaluator = new DecisionTreeEvaluator(userEvaluations);
                 var emptyUserEvaluations = userEvaluations.Where(e => e.IsEmpty()).ToList();
-                var movies = new List<SimpleMovie>();
-                var parameters = new double[3] { 1, 1, 1 };
-                var trainingSet = BuildTrainingSetForUser(client, userEvaluations);
-                var trainer = new Trainer
-                {
-                    trainSetElements = trainingSet.ToArray(),
-                    parameters = parameters.ToArray()
-                };
-
-                trainer.train();
-
-                //TODO
+               
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
                     var notEvaluatedMovie = FetchMovie(client, singleEmptyEvaluation.MovieId);
-                    if (notEvaluatedMovie != null)
-                    {
-                        singleEmptyEvaluation.Grade = FastRoundToInteger(trainer.polynomialValue(notEvaluatedMovie.ToVector(),
-                            trainer.parameters));
-                    }
-                    else
-                    {
-                        singleEmptyEvaluation.Grade = -1;
-                    }
+                    singleEmptyEvaluation.Grade = evaluator.PredictGrade(singleEmptyEvaluation.MovieId);
                 }
             }
         }
@@ -114,32 +96,6 @@ namespace MovieRecommender
             }
 
             return result;
-        }
-
-        public static List<double[]> BuildTrainingSetForUser(TMDbClient client, List<Evaluation> userEvaluations)
-        {
-            var trainingSet = new List<double[]>();
-
-            foreach (var singleUserEvaluation in userEvaluations)
-            {
-                var movie = FetchMovie(client, singleUserEvaluation.MovieId);
-
-                if (movie != null)
-                {
-                    double[] vector = movie.ToVector();
-                    double[] singleSet = new double[vector.Length + 1];
-
-                    for (int i = 0; i < vector.Length; i++)
-                    {
-                        singleSet[i] = vector[i];
-                    }
-
-                    singleSet[singleSet.Length - 1] = (double)singleUserEvaluation.Grade.Value;
-                    trainingSet.Add(singleSet);
-                }
-            }
-
-            return trainingSet;
         }
     }
 }

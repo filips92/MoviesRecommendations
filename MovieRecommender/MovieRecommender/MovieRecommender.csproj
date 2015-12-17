@@ -60,7 +60,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DecisionTreeEvaluator.cs" />
     <Compile Include="Evaluation.cs" />
+    <Compile Include="EvaluatorBase.cs" />
+    <Compile Include="KNearestNeighboursEvaluator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleMovie.cs" />

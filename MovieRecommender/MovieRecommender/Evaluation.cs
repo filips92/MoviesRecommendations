@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MovieRecommender
 {
-    class Evaluation
+    public class Evaluation
     {
         public int Id { get; set; }
         public int PersonId { get; set; }
