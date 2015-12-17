@@ -29,7 +29,7 @@ namespace MovieRecommender
                
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
-                    var notEvaluatedMovie = FetchMovie(client, singleEmptyEvaluation.MovieId);
+                    var notEvaluatedMovie = cachedMovies.Single(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
                     singleEmptyEvaluation.Grade = evaluator.PredictGrade(singleEmptyEvaluation.MovieId);
                 }
             }
