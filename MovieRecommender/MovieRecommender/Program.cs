@@ -7,11 +7,15 @@ using System.Configuration;
 using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace MovieRecommender
 {
     class Program
     {
+        private static List<SimpleMovie> CachedMovies = new List<SimpleMovie>();
+
         static void Main(string[] args)
         {
             var client = new TMDbClient(ConfigurationManager.AppSettings["TMDbAPIKey"]);
@@ -19,45 +23,43 @@ namespace MovieRecommender
             var evaluations = LoadEvaluations();
             var personIds = LoadPersonIds();
 
-            foreach (var personId in personIds) {
+            foreach (var personId in personIds)
+            {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
-                var emptyEvaluations = userEvaluations.Where(e => e.Grade == 0).ToList();
+                var emptyUserEvaluations = userEvaluations.Where(e => e.IsEmpty()).ToList();
                 var movies = new List<SimpleMovie>();
-                var trainingSet = new List<double[]>();
-                var parameters = new double[3] { 1, 1, 1};
-
-                Trainer trainer;
-                
-                foreach (var singleUserEvaluation in userEvaluations)
-                {
-                    var movie = new SimpleMovie(client.GetMovie(singleUserEvaluation.MovieId, MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews));
-                    
-                    if (movie.MovieId != 0 && singleUserEvaluation.Grade > 0)
-                    {
-                        double[] vector = movie.ToVector();
-                        double[] singleSet = new double[vector.Length + 1];
-
-                        for (int i = 0; i < vector.Length; i++)
-                        {
-                            singleSet[i] = vector[i];
-                        }
-                        
-                        singleSet[singleSet.Length - 1] = (double)singleUserEvaluation.Grade.Value;
-                        trainingSet.Add(singleSet);
-                        movies.Add(movie);
-                    }
-                }
-
-                trainer = new Trainer
+                var parameters = new double[3] { 1, 1, 1 };
+                var trainingSet = BuildTrainingSetForUser(client, userEvaluations);
+                var trainer = new Trainer
                 {
                     trainSetElements = trainingSet.ToArray(),
                     parameters = parameters.ToArray()
                 };
+
                 trainer.train();
 
                 //TODO
+                foreach (var singleEmptyEvaluation in emptyUserEvaluations)
+                {
+                    var notEvaluatedMovie = FetchMovie(client, singleEmptyEvaluation.MovieId);
+                    if (notEvaluatedMovie != null)
+                    {
+                        singleEmptyEvaluation.Grade = FastRoundToInteger(trainer.polynomialValue(notEvaluatedMovie.ToVector(),
+                            trainer.parameters));
+                    }
+                    else
+                    {
+                        singleEmptyEvaluation.Grade = -1;
+                    }
+                    Console.WriteLine(singleEmptyEvaluation.ToString());
+                }
             }
-           
+
+        }
+
+        private static int FastRoundToInteger(double input)
+        {
+            return (int)(input + 0.5);
         }
 
         private static List<int> LoadPersonIds()
@@ -95,6 +97,51 @@ namespace MovieRecommender
             }
 
             return evaluations;
+        }
+
+        private static SimpleMovie FetchMovie(TMDbClient client, int movieId)
+        {
+            var result = CachedMovies.SingleOrDefault(cm => cm.MovieId == movieId);
+
+            if (result == null)
+            {
+                var tmdbMovie = client.GetMovie(movieId,
+                    MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews);
+
+                if (tmdbMovie.Id > 0)
+                {
+                    result = new SimpleMovie(tmdbMovie);
+                    CachedMovies.Add(result);
+                }
+            }
+
+            return result;
+        }
+
+        public static List<double[]> BuildTrainingSetForUser(TMDbClient client, List<Evaluation> userEvaluations)
+        {
+            var trainingSet = new List<double[]>();
+
+            foreach (var singleUserEvaluation in userEvaluations)
+            {
+                var movie = FetchMovie(client, singleUserEvaluation.MovieId);
+
+                if (movie != null)
+                {
+                    double[] vector = movie.ToVector();
+                    double[] singleSet = new double[vector.Length + 1];
+
+                    for (int i = 0; i < vector.Length; i++)
+                    {
+                        singleSet[i] = vector[i];
+                    }
+
+                    singleSet[singleSet.Length - 1] = (double)singleUserEvaluation.Grade.Value;
+                    trainingSet.Add(singleSet);
+                }
+            }
+
+            return trainingSet;
         }
     }
 }
