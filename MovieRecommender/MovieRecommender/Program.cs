@@ -14,14 +14,12 @@ namespace MovieRecommender
 {
     class Program
     {
-        private static List<SimpleMovie> CachedMovies = new List<SimpleMovie>();
-
         static void Main(string[] args)
         {
             var client = new TMDbClient(ConfigurationManager.AppSettings["TMDbAPIKey"]);
-
             var evaluations = LoadEvaluations();
             var personIds = LoadPersonIds();
+            var cachedMovies = LoadCachedMovies();
             
             foreach (var personId in personIds)
             {
@@ -37,15 +35,26 @@ namespace MovieRecommender
             }
         }
 
-        private static int FastRoundToInteger(double input)
+        private static List<SimpleMovie> LoadCachedMovies()
         {
-            return (int)(input + 0.5);
+            var reader = new StreamReader(File.OpenRead("../../AppData/cachedMovies.csv"));
+            var simpleMovies = new List<SimpleMovie>();
+
+            reader.ReadLine();//skipping the column names
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                simpleMovies.Add(new SimpleMovie(line));
+            }
+
+            return simpleMovies;
         }
 
         private static List<int> LoadPersonIds()
         {
             var reader = new StreamReader(File.OpenRead("../../AppData/people.csv"));
             var personIds = new List<int>();
+
             reader.ReadLine();//skipping the column names
             while (!reader.EndOfStream)
             {
@@ -61,6 +70,7 @@ namespace MovieRecommender
         {
             var reader = new StreamReader(File.OpenRead("../../AppData/evaluations.csv"));
             var evaluations = new List<Evaluation>();
+
             reader.ReadLine();//skipping the column names
             while (!reader.EndOfStream)
             {
@@ -77,25 +87,6 @@ namespace MovieRecommender
             }
 
             return evaluations;
-        }
-
-        private static SimpleMovie FetchMovie(TMDbClient client, int movieId)
-        {
-            var result = CachedMovies.SingleOrDefault(cm => cm.MovieId == movieId);
-
-            if (result == null)
-            {
-                var tmdbMovie = client.GetMovie(movieId,
-                    MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews);
-
-                if (tmdbMovie.Id > 0)
-                {
-                    result = new SimpleMovie(tmdbMovie);
-                    CachedMovies.Add(result);
-                }
-            }
-
-            return result;
         }
     }
 }

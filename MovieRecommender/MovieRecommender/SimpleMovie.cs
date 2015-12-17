@@ -73,6 +73,19 @@ namespace MovieRecommender
             }
         }
 
+        public SimpleMovie(string csvLine)
+        {
+            var splittedLine = csvLine.Split(';');
+
+            this.Budget = Convert.ToInt64(splittedLine[0]);
+            this.DirectorId = Convert.ToInt32(splittedLine[1]);
+            this.MainLanguageId = Convert.ToInt32(splittedLine[2]);
+            this.MainActorId = Convert.ToInt32(splittedLine[3]);
+            this.Popularity = Convert.ToDouble(splittedLine[4]);
+            this.VoteAverage = Convert.ToDouble(splittedLine[5]);
+            this.Year = Convert.ToInt32(splittedLine[6]);
+        }
+
         public long Budget { get; set; }
         public string Director { get; set; }
         public int DirectorId { get; set; }
