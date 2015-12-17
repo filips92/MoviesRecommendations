@@ -51,10 +51,8 @@ namespace MovieRecommender
                     {
                         singleEmptyEvaluation.Grade = -1;
                     }
-                    Console.WriteLine(singleEmptyEvaluation.ToString());
                 }
             }
-
         }
 
         private static int FastRoundToInteger(double input)
