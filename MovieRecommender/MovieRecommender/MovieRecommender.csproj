@@ -73,6 +73,8 @@
     <None Include="App.config" />
     <None Include="AppData\evaluations.csv" />
     <None Include="AppData\people.csv" />
+    <None Include="AppData\task.csv" />
+    <None Include="AppData\train.csv" />
     <None Include="packages.config" />
     <None Include="Secrets.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

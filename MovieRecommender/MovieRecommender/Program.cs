@@ -18,6 +18,7 @@ namespace MovieRecommender
         {
             var client = new TMDbClient(ConfigurationManager.AppSettings["TMDbAPIKey"]);
             var evaluations = LoadEvaluations();
+            var emptyEvaluations = LoadEmptyEvaluations();
             var personIds = LoadPersonIds();
             var cachedMovies = LoadCachedMovies();
             
@@ -25,7 +26,7 @@ namespace MovieRecommender
             {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
                 var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);
-                var emptyUserEvaluations = userEvaluations.Where(e => e.IsEmpty()).ToList();
+                var emptyUserEvaluations = emptyEvaluations.Where(e => e.PersonId == personId).ToList();//userEvaluations.Where(e => e.IsEmpty()).ToList();
                
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
@@ -33,6 +34,16 @@ namespace MovieRecommender
                     singleEmptyEvaluation.Grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
                 }
             }
+            generateCsv(evaluations);
+        }
+
+        public static void generateCsv(List<Evaluation> evaluations) {
+            StringBuilder strBuilder = new StringBuilder();
+            foreach (var evaluation in evaluations)
+            {
+                strBuilder.AppendLine(evaluation.Id + ";" + evaluation.PersonId + ";" + evaluation.MovieId + ";" + evaluation.Grade);
+            }
+            File.WriteAllText("submissionTEST.csv", strBuilder.ToString());
         }
 
         private static List<SimpleMovie> LoadCachedMovies()
@@ -52,7 +63,7 @@ namespace MovieRecommender
 
         private static List<int> LoadPersonIds()
         {
-            var reader = new StreamReader(File.OpenRead("../../AppData/people.csv"));
+            var reader = new StreamReader(File.OpenRead("../../AppData/train.csv"));
             var personIds = new List<int>();
 
             reader.ReadLine();//skipping the column names
@@ -60,15 +71,17 @@ namespace MovieRecommender
             {
                 var line = reader.ReadLine();
                 var values = line.Split(';');
-                personIds.Add(Convert.ToInt32(values[0]));
+                personIds.Add(Convert.ToInt32(values[1]));
             }
+
+            personIds = personIds.Distinct().OrderBy(x => x).ToList();
 
             return personIds;
         }
 
         private static List<Evaluation> LoadEvaluations()
         {
-            var reader = new StreamReader(File.OpenRead("../../AppData/evaluations.csv"));
+            var reader = new StreamReader(File.OpenRead("../../AppData/train.csv"));
             var evaluations = new List<Evaluation>();
 
             reader.ReadLine();//skipping the column names
@@ -87,6 +100,28 @@ namespace MovieRecommender
             }
 
             return evaluations;
+        }
+
+        private static List<Evaluation> LoadEmptyEvaluations() {
+            var reader = new StreamReader(File.OpenRead("../../AppData/task.csv"));
+            var emptyEvaluations = new List<Evaluation>();
+
+            reader.ReadLine();//skipping the column names
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                var values = line.Split(';');
+                var evaluation = new Evaluation()
+                {
+                    Id = Convert.ToInt32(values[0]),
+                    PersonId = Convert.ToInt32(values[1]),
+                    MovieId = Convert.ToInt32(values[2]),
+                    Grade = 0
+                };
+                emptyEvaluations.Add(evaluation);
+            }
+
+            return emptyEvaluations;
         }
     }
 }

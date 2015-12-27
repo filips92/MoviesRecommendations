@@ -21,16 +21,41 @@ namespace MovieRecommender
         public override int PredictGrade(SimpleMovie movie)
         {
             List<double[]> distances = new List<double[]>();
+            List<Evaluation> ratedValuations = UserEvaluations.Where(e => e.Grade != 0).ToList();
 
-            foreach(Evaluation evaluation in UserEvaluations){
+
+            foreach (Evaluation evaluation in ratedValuations)
+            {
                 SimpleMovie ratedMovie = movies.Where(m => m.MovieId == evaluation.MovieId).SingleOrDefault();
+                SimpleMovie asdv = movies.Where(m => m.MovieId == 136).SingleOrDefault();
                 distances.Add(new double[]{evaluation.MovieId, EuclidianDistance(movie.ToVector(), ratedMovie.ToVector())});
             }
 
             distances = distances.OrderByDescending(d => d[1]).ToList();
-            Evaluation mostSimilarEvaluation = UserEvaluations.SingleOrDefault(e => e.MovieId == distances.First()[0]);
 
-            return (int)mostSimilarEvaluation.Grade;
+            List<double[]> top5distances = distances.Take(5).ToList();
+            List<Evaluation> top5Evaluations = new List<Evaluation>();
+
+            foreach (double[] distance in top5distances)
+            {
+                top5Evaluations.Add(UserEvaluations.SingleOrDefault(e => e.MovieId == distance[0]));
+            }
+            //grade ; occurrence
+            List<double[]> gradesOccurrences = new List<double[]>();
+            gradesOccurrences.Add(new double[] { 1, 0 });
+            gradesOccurrences.Add(new double[] { 2, 0 });
+            gradesOccurrences.Add(new double[] { 3, 0 });
+            gradesOccurrences.Add(new double[] { 4, 0 });
+            gradesOccurrences.Add(new double[] { 5, 0 });
+
+            foreach (Evaluation evaluation in top5Evaluations)
+            {
+                gradesOccurrences.ElementAt((int)evaluation.Grade - 1)[1] += 1;
+            }
+
+            gradesOccurrences = gradesOccurrences.OrderByDescending(g => g[1]).ToList();            
+
+            return (int)gradesOccurrences.First()[0];
         }
 
         public double EuclidianDistance(double[] X, double[] Y) {
