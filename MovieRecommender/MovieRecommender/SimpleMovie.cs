@@ -123,5 +123,20 @@ namespace MovieRecommender
         {
             return String.Join(" ", this.ToVector());
         }
+
+        public string ToCsvLine()
+        {
+            return String.Join(";", new double[]
+            {
+                this.MovieId,
+                this.Budget,
+                this.DirectorId,
+                this.MainLanguageId,
+                this.MainActorId,
+                this.Popularity,
+                this.VoteAverage,
+                this.Year
+            });
+        }
     }
 }
