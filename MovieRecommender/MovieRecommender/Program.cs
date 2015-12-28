@@ -40,20 +40,24 @@ namespace MovieRecommender
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
                     var notEvaluatedMovie = cachedMovies.SingleOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
-                    singleEmptyEvaluation.Grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
+                    /*singleEmptyEvaluation.Grade*/int grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
+
+                    emptyEvaluations.Single(e => e.Id == singleEmptyEvaluation.Id).Grade = grade;
                 }
             }
-            generateCsv(evaluations);
+            generateCsv(emptyEvaluations);
         }
 
-public static void generateCsv(List<Evaluation> evaluations) {
+        public static void generateCsv(List<Evaluation> evaluations) {
             StringBuilder strBuilder = new StringBuilder();
             foreach (var evaluation in evaluations)
             {
                 strBuilder.AppendLine(evaluation.Id + ";" + evaluation.PersonId + ";" + evaluation.MovieId + ";" + evaluation.Grade);
             }
             File.WriteAllText("submissionTEST.csv", strBuilder.ToString());
-        }private static void CacheAndSaveMovies(List<Evaluation> evaluations)
+        }
+        
+        private static void CacheAndSaveMovies(List<Evaluation> evaluations)
         {
             var cachedMoviesIds = new List<int>();
             var client = new TMDbClient(ConfigurationManager.AppSettings["TMDbAPIKey"]);
@@ -64,11 +68,12 @@ public static void generateCsv(List<Evaluation> evaluations) {
                 if (cachedMoviesIds.All(m => m != singleEvaluation.MovieId))
                 {
                     var movieToCache = client.GetMovie(singleEvaluation.MovieId, MovieMethods.Credits | MovieMethods.Keywords | MovieMethods.Reviews | MovieMethods.Translations);
+                    if (movieToCache.Id != 0) {
                     var cachedMovie = new SimpleMovie(movieToCache);
-
-                    Console.WriteLine(cachedMovie.Title);
-                    cachedMoviesIds.Add(cachedMovie.MovieId);
-                    csvBuilder.AppendLine(cachedMovie.ToCsvLine());
+                        Console.WriteLine(cachedMovie.Title);
+                        cachedMoviesIds.Add(cachedMovie.MovieId);
+                        csvBuilder.AppendLine(cachedMovie.ToCsvLine());
+                    }
                 }
             }
 
@@ -77,7 +82,7 @@ public static void generateCsv(List<Evaluation> evaluations) {
 
         }      
 
-  private static List<SimpleMovie> LoadCachedMovies()
+        private static List<SimpleMovie> LoadCachedMovies()
         {
             var reader = new StreamReader(File.OpenRead(CACHED_MOVIES_DATA_FILEPATH));
             var simpleMovies = new List<SimpleMovie>();
@@ -97,7 +102,7 @@ public static void generateCsv(List<Evaluation> evaluations) {
             var reader = new StreamReader(File.OpenRead("../../AppData/train.csv"));
             var personIds = new List<int>();
 
-            reader.ReadLine();//skipping the column names
+            //reader.ReadLine();//skipping the column names
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
@@ -115,7 +120,7 @@ public static void generateCsv(List<Evaluation> evaluations) {
             var reader = new StreamReader(File.OpenRead("../../AppData/train.csv"));
             var evaluations = new List<Evaluation>();
 
-            reader.ReadLine();//skipping the column names
+            //reader.ReadLine();//skipping the column names
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
@@ -137,7 +142,7 @@ public static void generateCsv(List<Evaluation> evaluations) {
             var reader = new StreamReader(File.OpenRead("../../AppData/task.csv"));
             var emptyEvaluations = new List<Evaluation>();
 
-            reader.ReadLine();//skipping the column names
+            //reader.ReadLine();//skipping the column names
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();

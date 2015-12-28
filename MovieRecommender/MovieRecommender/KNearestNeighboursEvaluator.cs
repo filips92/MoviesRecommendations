@@ -20,6 +20,10 @@ namespace MovieRecommender
 
         public override int PredictGrade(SimpleMovie movie)
         {
+            if (movie == null) {
+                return 0;
+            }
+
             List<double[]> distances = new List<double[]>();
             List<Evaluation> ratedValuations = UserEvaluations.Where(e => e.Grade != 0).ToList();
 
@@ -27,8 +31,10 @@ namespace MovieRecommender
             foreach (Evaluation evaluation in ratedValuations)
             {
                 SimpleMovie ratedMovie = movies.Where(m => m.MovieId == evaluation.MovieId).SingleOrDefault();
-                SimpleMovie asdv = movies.Where(m => m.MovieId == 136).SingleOrDefault();
-                distances.Add(new double[]{evaluation.MovieId, EuclidianDistance(movie.ToVector(), ratedMovie.ToVector())});
+                if (ratedMovie != null)
+                {
+                    distances.Add(new double[] { evaluation.MovieId, EuclidianDistance(movie.ToVector(), ratedMovie.ToVector()) });
+                }
             }
 
             distances = distances.OrderByDescending(d => d[1]).ToList();
