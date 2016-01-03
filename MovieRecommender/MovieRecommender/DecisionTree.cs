@@ -38,20 +38,34 @@ namespace MovieRecommender
         /// Calculates the (im)purity of a collection of examples
         /// </summary>
         /// <param name="Set">Set of data</param>
-        public float Entropy(Object Set)
+        public double Entropy(List<double[]> Set)
         {
+            //let's assume that here, the representation of a single movie will be a vector (SimpleMovie.toVector() with addition of the grade):
+            // { Budget, DirectorId, MainLanguageId, MainActorId, Popularity, VoteAverage, Year, Grade}
+            
             //PSEUDOCODE:
             /*             
-             *  • for i from 1 to c (i.e. for all possible values of a given attribute):
+             *  • for i from 1 to c (i.e. for all possible values of a given attribute (in our case grade I suppose)):
              *        sum( (-p_i) * logarythmWithBase2(p_i) ) ,
              *          where c is the number of possible values of given attribute,
              *          p_i is the proportion of examples from S with given value of given attribute (i.e. proportion of S belonging to class i)
              * 
              * • return the above sum
              */
+            List<double> possibleGrades = Set.Select(x => x[x.Length - 1]).Distinct().ToList();
+            double entropy = 0;
+
+            for (int i = 0; i < possibleGrades.Count; i++)
+            {
+                double p_i = Set.Where(x => x[x.Length - 1] == possibleGrades[i]).Count() / Set.Count();
+                entropy -= p_i * Math.Log(p_i, 2);
+            }
+
+            return entropy;
 
             //TODO: change data type of Set to an appriopriate one (depending on the chosen data structure)
-            throw new NotImplementedException();
+
+            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -59,7 +73,7 @@ namespace MovieRecommender
         /// </summary>
         /// <param name="Set"></param>
         /// <param name="Attribute"></param>
-        public float InformationGain(Object Set, Object Attribute)
+        public double InformationGain(List<double[]> Set, int Attribute)
         {
             //PSEUDOCODE
             /*
@@ -70,8 +84,19 @@ namespace MovieRecommender
              * • return Entropy(Set) - aboveSum
              */
 
+            List<double> attributePossibleValues = Set.Select(x => x[Attribute]).Distinct().ToList();
+            double sum = 0;
+
+            for (int i = 0; i < attributePossibleValues.Count; i++)
+            {
+                List<double[]> Set_v = Set.Where(x => x[Attribute] == attributePossibleValues[i]).ToList();
+                sum += (Set_v.Count() / Set.Count()) * Entropy(Set_v);
+            }
+
+            return Entropy(Set) - sum;
+
             //TODO: change data types of Set and Attribute to an appriopriate ones (depending on the chosen data structure)
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }        
     }
 }
