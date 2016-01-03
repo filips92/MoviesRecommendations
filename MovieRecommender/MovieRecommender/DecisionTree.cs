@@ -8,7 +8,10 @@ namespace MovieRecommender
 {
     class DecisionTree
     {
-
+        /// <summary>Returns a decision tree that correctly classifies the given Examples</summary>
+        /// <param name="Examples">Set of data</param>
+        /// <param name="Target_attribute">Attribute whose value is to be predicted by the tree</param>
+        /// <param name="Attributes">List of other attributes that may be tested by the learned decision tree</param>
         public void BuildDecisionTree(Object Examples, Object Target_attribute, Object Attributes)
         {
             //TODO: determine the arguments and the return type
@@ -69,7 +72,6 @@ namespace MovieRecommender
 
             //TODO: change data types of Set and Attribute to an appriopriate ones (depending on the chosen data structure)
             throw new NotImplementedException();
-        }
-
+        }        
     }
 }
