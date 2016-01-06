@@ -8,13 +8,48 @@ namespace MovieRecommender
 {
     class DecisionTree
     {
+        public List<Node> Nodes { get; set; }
+
+        public void InitiateTree(List<double[]> Examples, List<int> Attributes)
+        {
+            Node root = new Node();
+
+            List<double> grades = Examples.Select(e => e[e.Length - 1]).Distinct().ToList();
+            if (grades.Count == 1)
+            {
+                root.Attribute = (int)grades.First();
+                Nodes.Add(root);
+                return;
+            }
+            else 
+            {
+                if (Attributes.Count == 0)
+                {
+                    //this one needs to be checked
+                    double mostCommonValue = Examples.GroupBy(e => e[e.Length - 1]).OrderByDescending(e => e.Count()).First().Select(e => e[e.Length - 1]).Single();
+                    root.Attribute = (int)mostCommonValue;
+                    Nodes.Add(root);
+                    return;
+                }
+                else
+                {
+                    //recursion goes here
+                    BuildDecisionTree(root, Examples, Attributes[Attributes.Count - 1], Attributes);
+                }
+            }
+
+
+        }
+
         /// <summary>Returns a decision tree that correctly classifies the given Examples</summary>
         /// <param name="Examples">Set of data</param>
         /// <param name="Target_attribute">Attribute whose value is to be predicted by the tree</param>
         /// <param name="Attributes">List of other attributes that may be tested by the learned decision tree</param>
-        public void BuildDecisionTree(Object Examples, Object Target_attribute, Object Attributes)
+        public void BuildDecisionTree(Node root, List<double[]> Examples, int Target_attribute, List<int> Attributes)
         {
             //TODO: determine the arguments and the return type
+
+            // is the Target_attribute really needed??
 
             //PSEUDOCODE:
             /*
@@ -32,6 +67,47 @@ namespace MovieRecommender
              *              • else below this branch add the subtree
              *                  BuildDecisionTree(Examples_v_i, Target_attribute, Attributes - |A|)
              */
+
+
+            //while (true)
+            //{
+                int bestAttribute = 0;
+                double bestInformationGain = 0;
+
+                for (int i = 0; i < Attributes.Count; i++)
+                {
+                    double informationGain = InformationGain(Examples, Attributes[i]);
+                    if (informationGain > bestInformationGain)
+                    {
+                        bestInformationGain = informationGain;
+                        bestAttribute = i;
+                    }
+                }
+                root.Attribute = bestAttribute;
+                List<double> bestAttributeValues = Examples.Select(x => x[bestAttribute]).Distinct().ToList();
+
+                foreach (var value in bestAttributeValues)
+                {
+                    List<double[]> Examples_v_i = Examples.Where(e => e[bestAttribute] == value).ToList();
+                    if (Examples_v_i.Count == 0)
+                    {
+                        double _mostCommonValue = Examples.GroupBy(e => e[e.Length - 1]).OrderByDescending(e => e.Count()).First().Select(e => e[e.Length - 1]).Single();
+                        Node child = new Node();
+                        child.Value = (int)_mostCommonValue;
+                        root.Children.Add(child);
+                    }
+                    else
+                    {
+                        Node child = new Node();
+                        root.Children.Add(child);
+                        List<int> AttributesReduced = new List<int>(Attributes);
+                        AttributesReduced.Remove(Attributes.IndexOf(bestAttribute));
+
+                        BuildDecisionTree(child, Examples_v_i, Attributes[Attributes.Count - 1], AttributesReduced);
+                    }
+                }
+            //}
+
         }
 
         /// <summary>
@@ -57,7 +133,8 @@ namespace MovieRecommender
 
             for (int i = 0; i < possibleGrades.Count; i++)
             {
-                double p_i = Set.Where(x => x[x.Length - 1] == possibleGrades[i]).Count() / Set.Count();
+                double asd = Set.Where(x => x[x.Length - 1] == possibleGrades[i]).ToList().Count();
+                double p_i = asd / (double)(Set.Count());
                 entropy -= p_i * Math.Log(p_i, 2);
             }
 
@@ -90,7 +167,7 @@ namespace MovieRecommender
             for (int i = 0; i < attributePossibleValues.Count; i++)
             {
                 List<double[]> Set_v = Set.Where(x => x[Attribute] == attributePossibleValues[i]).ToList();
-                sum += (Set_v.Count() / Set.Count()) * Entropy(Set_v);
+                sum += ((double)Set_v.Count() / (double)Set.Count()) * Entropy(Set_v);
             }
 
             return Entropy(Set) - sum;

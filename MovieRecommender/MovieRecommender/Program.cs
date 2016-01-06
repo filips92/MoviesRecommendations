@@ -17,6 +17,39 @@ namespace MovieRecommender
         private const string CACHED_MOVIES_DATA_FILEPATH = "../../AppData/cachedMovies.csv";
         static void Main(string[] args)
         {
+
+
+
+            List<double[]> examples = new List<double[]>();
+
+            examples.Add(new double[] { 1, 0, 0, 0, 1 });
+            examples.Add(new double[] { 0, 1, 0, 0, 2 });
+            examples.Add(new double[] { 0, 0, 1, 0, 3 });
+            examples.Add(new double[] { 0, 0, 0, 1, 4 });
+            examples.Add(new double[] { 0, 0, 1, 1, 5 });
+
+            List<int> attributes = new List<int>();
+            attributes.Add(0);
+            attributes.Add(1);
+            attributes.Add(2);
+            attributes.Add(3);
+            attributes.Add(4);
+
+            DecisionTree tree = new DecisionTree();
+            tree.InitiateTree(examples, attributes);
+
+
+            int a = 0;
+            int b = 1;
+            a = b;
+
+
+
+
+
+
+
+
             var evaluations = LoadEvaluations();
 			var emptyEvaluations = LoadEmptyEvaluations();
 
