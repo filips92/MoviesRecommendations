@@ -33,21 +33,14 @@ namespace MovieRecommender
             attributes.Add(1);
             attributes.Add(2);
             attributes.Add(3);
-            attributes.Add(4);
 
             DecisionTree tree = new DecisionTree();
-            tree.InitiateTree(examples, attributes);
+            tree.BuildDecisionTree(tree.Root, examples, attributes);
 
 
             int a = 0;
             int b = 1;
             a = b;
-
-
-
-
-
-
 
 
             var evaluations = LoadEvaluations();
