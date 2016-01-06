@@ -8,14 +8,32 @@ namespace MovieRecommender
 {
     public class DecisionTreeEvaluator : EvaluatorBase
     {
-        public DecisionTreeEvaluator(List<Evaluation> userEvaluations) : base(userEvaluations)
+        public DecisionTree Tree { get; set; }
+
+        public DecisionTreeEvaluator(DecisionTree tree, List<Evaluation> userEvaluations)
+            : base(userEvaluations)
         {
             // additional initializing if needed
+            this.Tree = tree;
         }
 
         public override int PredictGrade(SimpleMovie movie)
         {
-            throw new NotImplementedException();
+            double[] movieVector = movie.ToVector();
+
+            Node root = Tree.Root;
+
+            while (true) {
+                if (root.Value != null)
+                {
+                    return (int)root.Value;
+                }
+                else
+                {
+                    //navigate through the tree
+                    root = root.Children.Where(c => c.PreviousNodeAttributeValue == movieVector[(int)root.Attribute]).Single();
+                }
+            }
         }
     }
 }

@@ -15,7 +15,6 @@ namespace MovieRecommender
         {
             // additional initializing if needed
             this.movies = movies;
-
         }
 
         public override int PredictGrade(SimpleMovie movie)
