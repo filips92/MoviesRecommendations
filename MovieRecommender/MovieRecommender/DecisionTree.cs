@@ -57,13 +57,13 @@ namespace MovieRecommender
             int bestAttribute = 0;
             double bestInformationGain = 0;
 
-            for (int i = 0; i < Attributes.Count - 1; i++)
+            for (int i = 0; i < Attributes.Count; i++)
             {
                 double informationGain = InformationGain(Examples, Attributes[i]);
                 if (informationGain > bestInformationGain)
                 {
                     bestInformationGain = informationGain;
-                    bestAttribute = i;
+                    bestAttribute = Attributes[i];
                 }
             }
             root.Attribute = bestAttribute;
@@ -86,7 +86,7 @@ namespace MovieRecommender
                     child.PreviousNodeAttributeValue = (int)value;
                     root.Children.Add(child);
                     List<int> AttributesReduced = new List<int>(Attributes);
-                    AttributesReduced.Remove(Attributes.ElementAt(bestAttribute));
+                    AttributesReduced.Remove(Attributes.IndexOf(bestAttribute));
 
                     BuildDecisionTree(child, Examples_v_i, AttributesReduced);
                 }
