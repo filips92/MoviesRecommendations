@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MovieRecommender
 {
-    class DecisionTree
+    public class DecisionTree
     {
         public Node Root { get; set; }
 

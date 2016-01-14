@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MovieRecommender
 {
-    class Node
+    public class Node
     {
         public int? Attribute { get; set; }// null if the node is the leaf
         public int? PreviousNodeAttributeValue { get; set; }

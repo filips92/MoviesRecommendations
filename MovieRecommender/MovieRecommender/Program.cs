@@ -17,32 +17,6 @@ namespace MovieRecommender
         private const string CACHED_MOVIES_DATA_FILEPATH = "../../AppData/cachedMovies.csv";
         static void Main(string[] args)
         {
-
-
-
-            List<double[]> examples = new List<double[]>();
-
-            examples.Add(new double[] { 1, 0, 0, 0, 1 });
-            examples.Add(new double[] { 0, 1, 0, 0, 2 });
-            examples.Add(new double[] { 0, 0, 1, 0, 3 });
-            examples.Add(new double[] { 0, 0, 0, 1, 4 });
-            examples.Add(new double[] { 0, 0, 1, 1, 5 });
-
-            List<int> attributes = new List<int>();
-            attributes.Add(0);
-            attributes.Add(1);
-            attributes.Add(2);
-            attributes.Add(3);
-
-            DecisionTree tree = new DecisionTree();
-            tree.BuildDecisionTree(tree.Root, examples, attributes);
-
-
-            int a = 0;
-            int b = 1;
-            a = b;
-
-
             var evaluations = LoadEvaluations();
 			var emptyEvaluations = LoadEmptyEvaluations();
 
@@ -61,12 +35,36 @@ namespace MovieRecommender
             {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
                 var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);
-                var emptyUserEvaluations = emptyEvaluations.Where(e => e.PersonId == personId).ToList();//userEvaluations.Where(e => e.IsEmpty()).ToList();
+                var emptyUserEvaluations = emptyEvaluations.Where(e => e.PersonId == personId).ToList();
+                List<double[]> userMovies = new List<double[]>();
+
+                foreach (var evaluation in userEvaluations)
+                {
+                    SimpleMovie movie = cachedMovies.Where(m => m.MovieId == evaluation.MovieId).SingleOrDefault();
+                    if (movie != null)
+                    {
+                        double[] movieVector = movie.ToVector();
+                        double[] vec = new double[movieVector.Length + 1];
+                        movieVector.CopyTo(vec, 0);
+                        vec[vec.Length - 1] = (double)evaluation.Grade;
+                        userMovies.Add(vec);
+                    }
+                }
+
+                List<int> attributes = new List<int>();
+
+                for (int i = 0; i < cachedMovies.First().ToVector().Length; i++)
+                {
+                    attributes.Add(i);
+                }
+
+                DecisionTree tree = new DecisionTree();
+                tree.BuildDecisionTree(tree.Root, userMovies, attributes);
 
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
                     var notEvaluatedMovie = cachedMovies.SingleOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
-                    /*singleEmptyEvaluation.Grade*/int grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
+                    int grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
 
                     emptyEvaluations.Single(e => e.Id == singleEmptyEvaluation.Id).Grade = grade;
                 }
