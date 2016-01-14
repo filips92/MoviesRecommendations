@@ -51,11 +51,18 @@ namespace MovieRecommender
                     }
                 }
 
-                List<int> attributes = new List<int>();
+                List<Attribute> attributes = new List<Attribute>();
 
                 for (int i = 0; i < cachedMovies.First().ToVector().Length; i++)
                 {
-                    attributes.Add(i);
+                    attributes.Add(new Attribute() {
+                        AttributeIndex = i
+                    });
+                }
+
+                foreach (var attribute in attributes)
+                {
+                    attribute.PossibleValues = userMovies.Select(x => x[attribute.AttributeIndex]).Distinct().ToList();
                 }
 
                 DecisionTree tree = new DecisionTree();

@@ -30,8 +30,16 @@ namespace MovieRecommender
                 }
                 else
                 {
-                    //navigate through the tree
-                    root = root.Children.Where(c => c.PreviousNodeAttributeValue == movieVector[(int)root.Attribute]).Single();
+                    //navigate through the (binary) tree
+                    if (movieVector[(int)root.Attribute] == root.AttributeValue)
+                    {
+                        root = root.Children[0];
+                    }
+                    else
+                    {
+                        root = root.Children[1];
+                    }
+                    //root = root.Children.Where(c => c.PreviousNodeAttributeValue == movieVector[(int)root.Attribute]).Single();
                 }
             }
         }

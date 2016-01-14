@@ -9,7 +9,7 @@ namespace MovieRecommender
     public class Node
     {
         public int? Attribute { get; set; }// null if the node is the leaf
-        public int? PreviousNodeAttributeValue { get; set; }
+        public double? AttributeValue { get; set; }
         public int? Value { get; set; } //not null if the node is the leaf of the tree
         public List<Node> Children { get; set; } //no elements if the node is the leaf of the tree
 
