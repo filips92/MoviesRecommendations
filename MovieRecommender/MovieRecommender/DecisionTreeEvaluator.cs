@@ -19,6 +19,11 @@ namespace MovieRecommender
 
         public override int PredictGrade(SimpleMovie movie)
         {
+            if (movie == null)
+            {
+                return 0;
+            }
+
             double[] movieVector = movie.ToVector();
 
             Node root = Tree.Root;

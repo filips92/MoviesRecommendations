@@ -34,7 +34,7 @@ namespace MovieRecommender
             foreach (var personId in personIds)
             {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
-                var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);
+                var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);                
                 var emptyUserEvaluations = emptyEvaluations.Where(e => e.PersonId == personId).ToList();
                 List<double[]> userMovies = new List<double[]>();
 
@@ -68,10 +68,13 @@ namespace MovieRecommender
                 DecisionTree tree = new DecisionTree();
                 tree.BuildDecisionTree(tree.Root, userMovies, attributes);
 
+                var treeEvaluator = new DecisionTreeEvaluator(tree, userEvaluations);
+
                 foreach (var singleEmptyEvaluation in emptyUserEvaluations)
                 {
                     var notEvaluatedMovie = cachedMovies.SingleOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
-                    int grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
+                    //int grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
+                    int grade = treeEvaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
 
                     emptyEvaluations.Single(e => e.Id == singleEmptyEvaluation.Id).Grade = grade;
                 }
