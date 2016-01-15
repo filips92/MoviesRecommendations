@@ -36,40 +36,50 @@ namespace MovieRecommender
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
                 var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);
                 var emptyUserEvaluations = emptyEvaluations.Where(e => e.PersonId == personId).ToList();
-                List<double[]> userMovies = new List<double[]>();
-
-                foreach (var evaluation in userEvaluations)
-                {
-                    SimpleMovie movie = cachedMovies.Where(m => m.MovieId == evaluation.MovieId).SingleOrDefault();
-                    if (movie != null)
-                    {
-                        double[] movieVector = movie.ToVector();
-                        double[] vec = new double[movieVector.Length + 1];
-                        movieVector.CopyTo(vec, 0);
-                        vec[vec.Length - 1] = (double)evaluation.Grade;
-                        userMovies.Add(vec);
-                    }
-                }
-
-                List<int> attributes = new List<int>();
-
-                for (int i = 0; i < cachedMovies.First().ToVector().Length; i++)
-                {
-                    attributes.Add(i);
-                }
-
-                DecisionTree tree = new DecisionTree();
-                tree.BuildDecisionTree(tree.Root, userMovies, attributes);
-
-                foreach (var singleEmptyEvaluation in emptyUserEvaluations)
-                {
-                    var notEvaluatedMovie = cachedMovies.SingleOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
-                    int grade = evaluator.PredictGrade(cachedMovies.Where(m => m.MovieId == singleEmptyEvaluation.MovieId).FirstOrDefault());
-
-                    emptyEvaluations.Single(e => e.Id == singleEmptyEvaluation.Id).Grade = grade;
-                }
+                ProcessSinglePerson(cachedMovies, evaluator, emptyEvaluations, userEvaluations, emptyUserEvaluations);
             }
             generateCsv(emptyEvaluations);
+        }
+
+        private static void ProcessSinglePerson(List<SimpleMovie> cachedMovies, EvaluatorBase evaluator, List<Evaluation> emptyEvaluations, List<Evaluation> userEvaluations, List<Evaluation> emptyUserEvaluations)
+        {
+            //Seems not to be used
+            //List<double[]> userMovies = BuildUserMoviesExtendedVectors(cachedMovies, userEvaluations);
+            //List<int> attributes = new List<int>();
+            //for (int i = 0; i < cachedMovies.First().ToVector().Length; i++)
+            //{
+            //    attributes.Add(i);
+            //}
+            //DecisionTree tree = new DecisionTree();
+            //tree.BuildDecisionTree(tree.Root, userMovies, attributes);
+
+            foreach (var singleEmptyEvaluation in emptyUserEvaluations)
+            {
+                var notEvaluatedMovie = cachedMovies.FirstOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
+                int grade = evaluator.PredictGrade(notEvaluatedMovie);
+
+                emptyEvaluations.Single(e => e.Id == singleEmptyEvaluation.Id).Grade = grade;
+            }
+        }
+
+        private static List<double[]> BuildUserMoviesExtendedVectors(List<SimpleMovie> cachedMovies, List<Evaluation> userEvaluations)
+        {
+            List<double[]> userMovies = new List<double[]>();
+        
+            foreach (var evaluation in userEvaluations)
+            {
+                SimpleMovie movie = cachedMovies.SingleOrDefault(m => m.MovieId == evaluation.MovieId);
+                if (movie != null)
+                {
+                    double[] movieVector = movie.ToVector();
+                    double[] vec = new double[movieVector.Length + 1];
+                    movieVector.CopyTo(vec, 0);
+                    vec[vec.Length - 1] = (double)evaluation.Grade;
+                    userMovies.Add(vec);
+                }
+            }
+
+            return userMovies;
         }
 
         public static void generateCsv(List<Evaluation> evaluations) {
