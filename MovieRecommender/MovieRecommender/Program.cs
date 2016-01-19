@@ -30,11 +30,12 @@ namespace MovieRecommender
 
             var cachedMovies = LoadCachedMovies();
             var personIds = LoadPersonIds();
+            Console.WriteLine("Will predict values for " + emptyEvaluations.Count + " movies");
 
             foreach (var personId in personIds)
             {
                 var userEvaluations = evaluations.Where(e => e.PersonId == personId).ToList();
-                var evaluator = new KNearestNeighboursEvaluator(userEvaluations, cachedMovies);
+                var evaluator = new SimilarityEvaluator(evaluations, userEvaluations);
                 var emptyUserEvaluations = emptyEvaluations.Where(e => e.PersonId == personId).ToList();
                 ProcessSinglePerson(cachedMovies, evaluator, emptyEvaluations, userEvaluations, emptyUserEvaluations);
             }
@@ -56,7 +57,7 @@ namespace MovieRecommender
             foreach (var singleEmptyEvaluation in emptyUserEvaluations)
             {
                 var notEvaluatedMovie = cachedMovies.FirstOrDefault(cm => cm.MovieId == singleEmptyEvaluation.MovieId);
-                int grade = evaluator.PredictGrade(notEvaluatedMovie);
+                int grade = notEvaluatedMovie != null ? evaluator.PredictGrade(notEvaluatedMovie) : new Random().Next(0,5);
 
                 emptyEvaluations.Single(e => e.Id == singleEmptyEvaluation.Id).Grade = grade;
             }
