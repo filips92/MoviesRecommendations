@@ -39,10 +39,12 @@ namespace MovieRecommender
                 {
                     // most similar = the most similar movies evaluated
                     var groups = otherUsersEvaluations
-                        .GroupBy(e => e.PersonId).OrderByDescending(g => g.Count());
-                    var mostSimilarPersonEvaluations = groups.First(); 
+                        .GroupBy(e => e.PersonId)
+                        .OrderByDescending(g => g.Count());
+                    var mostSimilarPersonEvaluations = groups.First();
+                    var topResults = mostSimilarPersonEvaluations.Where(e => e.MovieId == movie.MovieId).Take(5);
 
-                    result = mostSimilarPersonEvaluations.First(e => e.MovieId == movie.MovieId).Grade.Value;
+                    result = (int)(topResults.Average(e => e.Grade.Value) + 0.5);
                 }
                 else
                 {
