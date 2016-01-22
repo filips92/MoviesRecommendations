@@ -57,16 +57,6 @@ namespace MovieRecommender
                             }
                         }
                     }
-                    
-
-                        //if (movieVector[(int)root.Attribute] > root.AttributeValue)//????
-                        //{
-                        //    root = root.Children[0];
-                        //}
-                        //else
-                        //{
-                        //    root = root.Children[1];
-                        //}
                 }
             }
         }
