@@ -74,26 +74,24 @@ namespace MovieRecommender
                 foreach (var attribute in attributes)
                 {
                     attribute.PossibleValues = userMovies.Select(x => x[attribute.AttributeIndex]).Distinct().OrderBy(x => x).ToList();//from smallest to highest value
-                    //if (attribute.AttributeIndex >= 1)
-                    //{
-                        List<double> attributePossibleValuesNarrowedRange = attribute.PossibleValues.Where((x, i) => i % 10 == 0).ToList();
-                        for (int i = 1; i < attributePossibleValuesNarrowedRange.Count; i++)
+
+                    List<double> attributePossibleValuesNarrowedRange = attribute.PossibleValues.Where((x, i) => i % 10 == 0).ToList();
+                    for (int i = 1; i < attributePossibleValuesNarrowedRange.Count; i++)
+                    {
+                        attribute.ValuesRanges.Add(new Range()
                         {
-                            attribute.ValuesRanges.Add(new Range()
-                            {
-                                Min = attributePossibleValuesNarrowedRange[i - 1],
-                                Max = attributePossibleValuesNarrowedRange[i]
-                            });                            
-                        }
-                        if (attribute.ValuesRanges.Last().Max != attribute.PossibleValues.Last())
+                            Min = attributePossibleValuesNarrowedRange[i - 1],
+                            Max = attributePossibleValuesNarrowedRange[i]
+                        });                            
+                    }
+                    if (attribute.ValuesRanges.Last().Max != attribute.PossibleValues.Last())
+                    {
+                        attribute.ValuesRanges.Add(new Range()
                         {
-                            attribute.ValuesRanges.Add(new Range()
-                            {
-                                Min = attribute.ValuesRanges.Last().Max,
-                                Max = attribute.PossibleValues.Last()
-                            });
-                        }
-                    //}                    
+                            Min = attribute.ValuesRanges.Last().Max,
+                            Max = attribute.PossibleValues.Last()
+                        });
+                    }                   
                 }
 
                 DecisionTree tree = new DecisionTree();

@@ -19,7 +19,6 @@ namespace MovieRecommender
 
         public override int PredictGrade(SimpleMovie movie)
         {
-            int nodePasses = 0;
             if (movie == null)
             {
                 return 0;
@@ -36,32 +35,38 @@ namespace MovieRecommender
                 }
                 else
                 {
-                    //navigate through the (binary) tree
-                    //if (root.Attribute == 0)
-                    //{
-                    //    if (movieVector[(int)root.Attribute] == root.AttributeValue)
-                    //    {
-                    //        root = root.Children[0];
-                    //    }
-                    //    else
-                    //    {
-                    //        root = root.Children[1];
-                    //    }
-                    //}
-                    //else
-                    //{
-                        if (movieVector[(int)root.Attribute] > root.AttributeValue)//????
+                    //navigate through the tree
+                    if (movieVector[(int)root.Attribute] <= root.Ranges[0].Min)
+                    {
+                        root = root.Children[0];
+                    }
+                    else 
+                    {
+                        if (movieVector[(int)root.Attribute] >= root.Ranges.Last().Max)
                         {
-                            root = root.Children[0];
+                            root = root.Children.Last();
                         }
                         else
                         {
-                            root = root.Children[1];
+                            for (int i = 0; i < root.Ranges.Count; i++)
+                            {
+                                if (movieVector[(int)root.Attribute] >= root.Ranges[i].Min && movieVector[(int)root.Attribute] < root.Ranges[i].Max)
+                                {
+                                    root = root.Children[i];
+                                }
+                            }
                         }
-                    //}
+                    }
                     
-                    //root = root.Children.Where(c => c.PreviousNodeAttributeValue == movieVector[(int)root.Attribute]).Single();
-                    //Console.WriteLine(nodePasses++);
+
+                        //if (movieVector[(int)root.Attribute] > root.AttributeValue)//????
+                        //{
+                        //    root = root.Children[0];
+                        //}
+                        //else
+                        //{
+                        //    root = root.Children[1];
+                        //}
                 }
             }
         }
