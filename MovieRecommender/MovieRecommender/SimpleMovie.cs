@@ -108,11 +108,11 @@ namespace MovieRecommender
         public double[] ToVector()
         {
             return new double[]
-            {
+            {          
                 this.Budget,
                 this.DirectorId,
                 this.MainLanguageId,
-                this.MainActorId,
+                this.MainActorId,                
                 this.Popularity,
                 this.VoteAverage,
                 this.Year

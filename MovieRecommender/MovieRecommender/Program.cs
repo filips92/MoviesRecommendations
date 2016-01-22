@@ -53,20 +53,58 @@ namespace MovieRecommender
 
                 List<Attribute> attributes = new List<Attribute>();
 
+                // 0 Budget - range
+              //--  // 1 DirectorId - exact
+              //--  // 2 MainLanguageId - exact
+              //--  // 3 MainActorId - exact                
+                // 4 Popularity - range
+                // 5 VoteAverage - range
+                // 6 Year - range
+
                 for (int i = 0; i < cachedMovies.First().ToVector().Length; i++)
                 {
                     attributes.Add(new Attribute() {
                         AttributeIndex = i
                     });
                 }
+                attributes.Remove(attributes.Where(a => a.AttributeIndex == 1).Single());
+                attributes.Remove(attributes.Where(a => a.AttributeIndex == 2).Single());
+                attributes.Remove(attributes.Where(a => a.AttributeIndex == 3).Single());
 
                 foreach (var attribute in attributes)
                 {
-                    attribute.PossibleValues = userMovies.Select(x => x[attribute.AttributeIndex]).Distinct().ToList();
+                    attribute.PossibleValues = userMovies.Select(x => x[attribute.AttributeIndex]).Distinct().OrderBy(x => x).ToList();//from smallest to highest value
+                    //if (attribute.AttributeIndex >= 1)
+                    //{
+                        List<double> attributePossibleValuesNarrowedRange = attribute.PossibleValues.Where((x, i) => i % 10 == 0).ToList();
+                        for (int i = 1; i < attributePossibleValuesNarrowedRange.Count; i++)
+                        {
+                            attribute.ValuesRanges.Add(new Range()
+                            {
+                                Min = attributePossibleValuesNarrowedRange[i - 1],
+                                Max = attributePossibleValuesNarrowedRange[i]
+                            });                            
+                        }
+                        if (attribute.ValuesRanges.Last().Max != attribute.PossibleValues.Last())
+                        {
+                            attribute.ValuesRanges.Add(new Range()
+                            {
+                                Min = attribute.ValuesRanges.Last().Max,
+                                Max = attribute.PossibleValues.Last()
+                            });
+                        }
+                    //}                    
                 }
 
                 DecisionTree tree = new DecisionTree();
                 tree.BuildDecisionTree(tree.Root, userMovies, attributes);
+                int depth = tree.TreeDepth(tree.Root);
+
+                List<double[]> grades1 = userMovies.Where(m => m[m.Length - 1] == 1).ToList();
+                List<double[]> grades2 = userMovies.Where(m => m[m.Length - 1] == 2).ToList();
+                List<double[]> grades3 = userMovies.Where(m => m[m.Length - 1] == 3).ToList();
+                List<double[]> grades4 = userMovies.Where(m => m[m.Length - 1] == 4).ToList();
+                List<double[]> grades5 = userMovies.Where(m => m[m.Length - 1] == 5).ToList();
 
                 var treeEvaluator = new DecisionTreeEvaluator(tree, userEvaluations);
 

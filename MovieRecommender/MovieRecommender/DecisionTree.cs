@@ -47,7 +47,8 @@ namespace MovieRecommender
                 if (Attributes.Count == 0)
                 {
                     //this one needs to be checked
-                    double mostCommonValue = Examples.GroupBy(e => e[e.Length - 1]).OrderByDescending(e => e.Count()).First().Select(e => e[e.Length - 1]).Single();
+                    List<double[]> mostCommon = Examples.GroupBy(e => e[e.Length - 1]).OrderByDescending(e => e.Count()).First().ToList();
+                    double mostCommonValue = mostCommon.Select(e => e[e.Length - 1]).First();
                     root.Value = (int)mostCommonValue;
                     return;
                 }
@@ -55,53 +56,69 @@ namespace MovieRecommender
             }
 
             int bestAttribute = 0;
-            double bestAttributeBestValue = 0;
             double bestInformationGain = 0;
+            bool[] trueOrFalse = new bool[] { true, false };
 
             for (int i = 0; i < Attributes.Count; i++)
             {
-                for (int j = 0; j < Attributes[i].PossibleValues.Count; j++)
-                {
-                    double informationGain = InformationGain(Examples, Attributes[i].AttributeIndex, Attributes[i].PossibleValues[j]);
+                //for (int j = 0; j < Attributes[i].PossibleValues.Count; j++)
+                //{
+                    double informationGain = InformationGain(Examples, Attributes[i].AttributeIndex, Attributes[i].ValuesRanges);
                     if (informationGain > bestInformationGain)
                     {
                         bestInformationGain = informationGain;
                         bestAttribute = Attributes[i].AttributeIndex;
-                        bestAttributeBestValue = Attributes[i].PossibleValues[j];
+                        //bestAttributeBestValue = Attributes[i].PossibleValues[j];
                     }
-                }
+                    if (Attributes.Count == 1)
+                    {
+                        bestAttribute = Attributes[0].AttributeIndex;
+                    }
+                //}
             }
-            root.Attribute = bestAttribute;
-            root.AttributeValue = bestAttributeBestValue;
-            List<double> bestAttributeValues = Examples.Select(x => x[bestAttribute]).Distinct().ToList();
-            bool[] trueOrFalse = new bool[] { true, false };
+            root.Attribute = bestAttribute;            
+            List<Range> bestAttributeRanges = Attributes.Where(a => a.AttributeIndex == bestAttribute).Single().ValuesRanges;//Examples.Select(x => x[bestAttribute]).Distinct().ToList();
+            root.Ranges = bestAttributeRanges;
 
-
-            foreach (var value in trueOrFalse)
+            //foreach (var value in trueOrFalse)
+            foreach (var range in bestAttributeRanges)
             {
-                List<double[]> Examples_v_i = Examples.Where(e => (e[bestAttribute] == bestAttributeBestValue) == value).ToList();
+                List<double[]> Examples_v_i;
+
+                //if (root.Attribute == 0)
+                //{
+                //    Examples_v_i = Examples.Where(e => (e[bestAttribute] == bestAttributeBestValue) == value).ToList();
+                //}
+                //else
+                //{
+                Examples_v_i = Examples.Where(e => e[bestAttribute] >= range.Min && e[bestAttribute] < range.Max).ToList();//????
+                //}
+                
                 if (Examples_v_i.Count == 0)
                 {                   
                     double _mostCommonValue = Examples.GroupBy(e => e[e.Length - 1]).OrderByDescending(e => e.Count()).First().Select(e => e[e.Length - 1]).First();                    
                     Node child = new Node();
                     child.Value = (int)_mostCommonValue;
-                    //child.PreviousNodeAttributeValue = (int)value;
                     root.Children.Add(child);
                 }
                 else
                 {
                     Node child = new Node();
-                    //child.PreviousNodeAttributeValue = (int)value;
                     root.Children.Add(child);
-                    Attributes.Where(a => a.AttributeIndex == bestAttribute).Single().PossibleValues.Remove(bestAttributeBestValue);
-                    if(Attributes.Where(a => a.AttributeIndex == bestAttribute).Single().PossibleValues.Count == 0)
-                    {
-                        Attributes.Remove(Attributes.Where(a => a.AttributeIndex == bestAttribute).Single());
-                    }
-                    //List<int> AttributesReduced = new List<int>(Attributes);
-                    //AttributesReduced.Remove(Attributes.IndexOf(bestAttribute));
+                    Attribute attr = Attributes.Where(a => a.AttributeIndex == bestAttribute).SingleOrDefault();
+                    if(attr != null){
+                        //if (attr.PossibleValues.Contains(bestAttributeBestValue))
+                        //{
+                        //    attr.PossibleValues.Remove(bestAttributeBestValue);
+                        //}
 
-                    BuildDecisionTree(child, Examples_v_i, Attributes/*Reduced*/);
+                        //if (Attributes.Where(a => a.AttributeIndex == bestAttribute).Single().PossibleValues.Count == 0)
+                        //{
+                            Attributes.Remove(Attributes.Where(a => a.AttributeIndex == bestAttribute).Single());
+                        //}
+                    }
+
+                    BuildDecisionTree(child, Examples_v_i, Attributes);
                 }
             }
 
@@ -136,10 +153,6 @@ namespace MovieRecommender
             }
 
             return entropy;
-
-            //TODO: change data type of Set to an appriopriate one (depending on the chosen data structure)
-
-            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -147,7 +160,7 @@ namespace MovieRecommender
         /// </summary>
         /// <param name="Set"></param>
         /// <param name="Attribute"></param>
-        public double InformationGain(List<double[]> Set, int AttributeIndex, double AttributeValue)
+        public double InformationGain(List<double[]> Set, int AttributeIndex, List<double> AttributeValues)
         {
             //PSEUDOCODE
             /*
@@ -161,16 +174,45 @@ namespace MovieRecommender
             //List<double> attributePossibleValues = Set.Select(x => x[Attribute]).Distinct().ToList();
             double sum = 0;
 
-            //for (int i = 0; i < attributePossibleValues.Count; i++)
-            //{
-            List<double[]> Set_v = Set.Where(x => x[AttributeIndex] == AttributeValue).ToList();//Set.Where(x => x[Attribute] == attributePossibleValues[i]).ToList();
+            for (int i = 0; i < AttributeValues.Count; i++)
+            {
+                List<double[]> Set_v = Set.Where(x => x[AttributeIndex] == AttributeValues[i]).ToList();//Set.Where(x => x[Attribute] == attributePossibleValues[i]).ToList();
                 sum += ((double)Set_v.Count() / (double)Set.Count()) * Entropy(Set_v);
-            //}
+            }
 
             return Entropy(Set) - sum;
+        }
 
-            //TODO: change data types of Set and Attribute to an appriopriate ones (depending on the chosen data structure)
-            //throw new NotImplementedException();
-        }        
+        public double InformationGain(List<double[]> Set, int AttributeIndex, List<Range> AttributeRanges)
+        {
+            //PSEUDOCODE
+            /*
+             * • for all v belonging to a set of all possible values of Attribute:
+             *      sum( |Set_v| / |Set| * Entropy(Set_v) ) ,
+             *          where Set_v is the subset of Set for which Attribute has value v
+             *      
+             * • return Entropy(Set) - aboveSum
+             */
+
+            //List<double> attributePossibleValues = Set.Select(x => x[Attribute]).Distinct().ToList();
+            double sum = 0;
+
+            for (int i = 0; i < AttributeRanges.Count; i++)
+            {
+                List<double[]> Set_v = Set.Where(x => x[AttributeIndex] >= AttributeRanges[i].Min && x[AttributeIndex] < AttributeRanges[i].Max).ToList();//Set.Where(x => x[Attribute] == attributePossibleValues[i]).ToList();
+                sum += ((double)Set_v.Count() / (double)Set.Count()) * Entropy(Set_v);
+            }
+
+            return Entropy(Set) - sum;
+        }
+
+        public int TreeDepth(Node pRoot)
+        {
+            if (pRoot.Children.Count == 0)
+                return 0;
+            int nLeft = TreeDepth(pRoot.Children[0]);
+            int nRight = TreeDepth(pRoot.Children[1]);
+            return (nLeft > nRight) ? (nLeft + 1) : (nRight + 1);
+        }
     }
 }

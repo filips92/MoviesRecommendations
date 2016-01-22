@@ -19,6 +19,7 @@ namespace MovieRecommender
 
         public override int PredictGrade(SimpleMovie movie)
         {
+            int nodePasses = 0;
             if (movie == null)
             {
                 return 0;
@@ -36,15 +37,31 @@ namespace MovieRecommender
                 else
                 {
                     //navigate through the (binary) tree
-                    if (movieVector[(int)root.Attribute] == root.AttributeValue)
-                    {
-                        root = root.Children[0];
-                    }
-                    else
-                    {
-                        root = root.Children[1];
-                    }
+                    //if (root.Attribute == 0)
+                    //{
+                    //    if (movieVector[(int)root.Attribute] == root.AttributeValue)
+                    //    {
+                    //        root = root.Children[0];
+                    //    }
+                    //    else
+                    //    {
+                    //        root = root.Children[1];
+                    //    }
+                    //}
+                    //else
+                    //{
+                        if (movieVector[(int)root.Attribute] > root.AttributeValue)//????
+                        {
+                            root = root.Children[0];
+                        }
+                        else
+                        {
+                            root = root.Children[1];
+                        }
+                    //}
+                    
                     //root = root.Children.Where(c => c.PreviousNodeAttributeValue == movieVector[(int)root.Attribute]).Single();
+                    //Console.WriteLine(nodePasses++);
                 }
             }
         }

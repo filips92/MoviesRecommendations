@@ -10,9 +10,10 @@ namespace MovieRecommender
     {
         public int AttributeIndex { get; set; }
         public List<double> PossibleValues { get; set; }
-
+        public List<Range> ValuesRanges { get; set; }
         public Attribute() {
             PossibleValues = new List<double>();
+            ValuesRanges = new List<Range>();
         }
     }
 }
